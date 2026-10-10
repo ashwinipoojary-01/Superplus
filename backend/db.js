@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export function initDatabase(dbPath, seedPath) {
-  const resolvedDbPath = dbPath || process.env.DB_PATH || path.join(__dirname, 'surpluslink.db');
+  const resolvedDbPath = dbPath || process.env.DB_PATH || (process.env.VERCEL ? '/tmp/surpluslink.db' : path.join(__dirname, 'surpluslink.db'));
   const db = new Database(resolvedDbPath);
 
   // Enable foreign keys and WAL mode for better concurrency
@@ -159,3 +159,4 @@ export function seedDatabase(db, seedData) {
 
   insertSeed();
 }
+
