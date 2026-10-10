@@ -1,0 +1,23 @@
+{
+  "name": "surpluslink",
+  "version": "1.0.0",
+  "description": "SurplusLink - Professional Food Rescue Dashboard and Inventory Platform",
+  "private": true,
+  "scripts": {
+    "start": "node backend/server.js",
+    "test": "npm --prefix backend test",
+    "build": "npm --prefix frontend run build",
+    "dev:backend": "npm --prefix backend start",
+    "dev:frontend": "npm --prefix frontend run dev"
+  },
+  "keywords": [
+    "food-rescue",
+    "sustainability",
+    "hackathon",
+    "sqlite",
+    "react",
+    "express"
+  ],
+  "author": "Ashwini",
+  "license": "ISC"
+}

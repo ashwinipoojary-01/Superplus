@@ -1,0 +1,102 @@
+{
+  "simulated_now": "2026-10-10T09:00",
+  "donors": [
+    {
+      "id": "donor-1",
+      "name": "GreenGrocer Market",
+      "address": "124 Market St, Downtown",
+      "phone": "555-0101"
+    },
+    {
+      "id": "donor-2",
+      "name": "Sunrise Bakery",
+      "address": "45 Elm Ave, Uptown",
+      "phone": "555-0102"
+    },
+    {
+      "id": "donor-3",
+      "name": "Valley Fresh Produce",
+      "address": "88 River Rd, Northside",
+      "phone": "555-0103"
+    }
+  ],
+  "volunteers": [
+    {
+      "id": "vol-1",
+      "name": "Alex Rivera",
+      "capacity": 20,
+      "eligible_zones": ["Downtown", "Uptown"],
+      "phone": "555-0201"
+    },
+    {
+      "id": "vol-2",
+      "name": "Samira Khan",
+      "capacity": 15,
+      "eligible_zones": ["Northside", "Downtown"],
+      "phone": "555-0202"
+    },
+    {
+      "id": "vol-3",
+      "name": "Carlos Gomez",
+      "capacity": 30,
+      "eligible_zones": ["Uptown", "Northside", "Downtown"],
+      "phone": "555-0203"
+    }
+  ],
+  "donations": [
+    {
+      "id": "don-1",
+      "donor_id": "donor-1",
+      "zone": "Downtown",
+      "description": "50kg Fresh organic vegetables (carrots, leafy greens, bell peppers)",
+      "total_quantity": 50,
+      "pickup_from": "2026-10-10T10:00",
+      "pickup_until": "2026-10-10T14:00"
+    },
+    {
+      "id": "don-2",
+      "donor_id": "donor-2",
+      "zone": "Uptown",
+      "description": "25kg Artisan whole-wheat sourdough loaves & croissants",
+      "total_quantity": 25,
+      "pickup_from": "2026-10-10T09:30",
+      "pickup_until": "2026-10-10T12:00"
+    },
+    {
+      "id": "don-3",
+      "donor_id": "donor-3",
+      "zone": "Northside",
+      "description": "40kg Surplus boxed dairy and oat milk crates",
+      "total_quantity": 40,
+      "pickup_from": "2026-10-10T11:00",
+      "pickup_until": "2026-10-10T16:00"
+    },
+    {
+      "id": "don-4",
+      "donor_id": "donor-1",
+      "zone": "Downtown",
+      "description": "15kg Ripe seasonal fruits (apples, bananas, oranges)",
+      "total_quantity": 15,
+      "pickup_from": "2026-10-10T08:00",
+      "pickup_until": "2026-10-10T08:45"
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-1",
+      "donation_id": "don-1",
+      "volunteer_id": "vol-1",
+      "quantity": 15,
+      "planned_pickup_time": "2026-10-10T11:00",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "claim-2",
+      "donation_id": "don-2",
+      "volunteer_id": "vol-3",
+      "quantity": 10,
+      "planned_pickup_time": "2026-10-10T10:30",
+      "status": "ACTIVE"
+    }
+  ]
+}
