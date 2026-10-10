@@ -1,3 +1,4 @@
+
 import express from 'express';
 import cors from 'cors';
 import fs from 'fs';
@@ -32,14 +33,21 @@ export function createApp(dbInstance) {
 
   // Health check
   app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', service: 'SurplusLink API', simulated_now: getSimulatedNow(db) });
+    try {
+      res.json({
+        status: 'ok',
+        service: 'SurplusLink API',
+        simulated_now: getSimulatedNow(db)
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
   });
 
   // Complete application state
   app.get('/api/state', (req, res) => {
     try {
-      const state = getAppState(db);
-      res.json(state);
+      res.json(getAppState(db));
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -48,8 +56,7 @@ export function createApp(dbInstance) {
   // Simulated clock
   app.get('/api/clock', (req, res) => {
     try {
-      const simulatedNow = getSimulatedNow(db);
-      res.json({ simulated_now: simulatedNow });
+      res.json({ simulated_now: getSimulatedNow(db) });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -58,10 +65,15 @@ export function createApp(dbInstance) {
   app.post('/api/clock/advance', (req, res) => {
     try {
       const { newSimulatedNow } = req.body;
+
       if (!newSimulatedNow) {
-        return res.status(400).json({ error: 'Missing newSimulatedNow field.' });
+        return res.status(400).json({
+          error: 'Missing newSimulatedNow field.'
+        });
       }
+
       const result = advanceClock(db, newSimulatedNow);
+
       res.json({
         success: true,
         ...result,
@@ -75,8 +87,7 @@ export function createApp(dbInstance) {
   // Donors
   app.get('/api/donors', (req, res) => {
     try {
-      const donors = getAllDonors(db);
-      res.json(donors);
+      res.json(getAllDonors(db));
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -84,8 +95,14 @@ export function createApp(dbInstance) {
 
   app.get('/api/donors/:id', (req, res) => {
     try {
-      const donor = db.prepare('SELECT * FROM donors WHERE id = ?').get(req.params.id);
-      if (!donor) return res.status(404).json({ error: 'Donor not found.' });
+      const donor = db
+        .prepare('SELECT * FROM donors WHERE id = ?')
+        .get(req.params.id);
+
+      if (!donor) {
+        return res.status(404).json({ error: 'Donor not found.' });
+      }
+
       res.json(donor);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -95,8 +112,7 @@ export function createApp(dbInstance) {
   // Volunteers
   app.get('/api/volunteers', (req, res) => {
     try {
-      const volunteers = getAllVolunteers(db);
-      res.json(volunteers);
+      res.json(getAllVolunteers(db));
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -104,11 +120,17 @@ export function createApp(dbInstance) {
 
   app.get('/api/volunteers/:id', (req, res) => {
     try {
-      const vol = db.prepare('SELECT * FROM volunteers WHERE id = ?').get(req.params.id);
-      if (!vol) return res.status(404).json({ error: 'Volunteer not found.' });
+      const volunteer = db
+        .prepare('SELECT * FROM volunteers WHERE id = ?')
+        .get(req.params.id);
+
+      if (!volunteer) {
+        return res.status(404).json({ error: 'Volunteer not found.' });
+      }
+
       res.json({
-        ...vol,
-        eligible_zones: JSON.parse(vol.eligible_zones || '[]')
+        ...volunteer,
+        eligible_zones: JSON.parse(volunteer.eligible_zones || '[]')
       });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -118,8 +140,7 @@ export function createApp(dbInstance) {
   // Donations
   app.get('/api/donations', (req, res) => {
     try {
-      const donations = getAllDonations(db);
-      res.json(donations);
+      res.json(getAllDonations(db));
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -128,9 +149,20 @@ export function createApp(dbInstance) {
   app.get('/api/donations/:id', (req, res) => {
     try {
       const donations = getAllDonations(db);
-      const donation = donations.find(d => d.id === req.params.id);
-      if (!donation) return res.status(404).json({ error: 'Donation not found.' });
-      const claims = db.prepare('SELECT * FROM claims WHERE donation_id = ?').all(req.params.id);
+      const donation = donations.find(
+        item => item.id === req.params.id
+      );
+
+      if (!donation) {
+        return res.status(404).json({
+          error: 'Donation not found.'
+        });
+      }
+
+      const claims = db
+        .prepare('SELECT * FROM claims WHERE donation_id = ?')
+        .all(req.params.id);
+
       res.json({ ...donation, claims });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -139,8 +171,24 @@ export function createApp(dbInstance) {
 
   app.post('/api/donations', (req, res) => {
     try {
-      const { donorId, description, quantity, pickup_from, pickup_until, zone } = req.body;
-      const created = createDonation(db, { donorId, description, quantity, pickup_from, pickup_until, zone });
+      const {
+        donorId,
+        description,
+        quantity,
+        pickup_from,
+        pickup_until,
+        zone
+      } = req.body;
+
+      const created = createDonation(db, {
+        donorId,
+        description,
+        quantity,
+        pickup_from,
+        pickup_until,
+        zone
+      });
+
       res.status(201).json(created);
     } catch (err) {
       res.status(err.status || 500).json({
@@ -153,10 +201,17 @@ export function createApp(dbInstance) {
   app.post('/api/donations/:id/cancel', (req, res) => {
     try {
       const { donorId } = req.body;
-      const result = cancelDonation(db, { donationId: req.params.id, donorId });
+
+      const result = cancelDonation(db, {
+        donationId: req.params.id,
+        donorId
+      });
+
       res.json(result);
     } catch (err) {
-      res.status(err.status || 500).json({ error: err.message });
+      res.status(err.status || 500).json({
+        error: err.message
+      });
     }
   });
 
@@ -164,12 +219,19 @@ export function createApp(dbInstance) {
   app.get('/api/claims', (req, res) => {
     try {
       let claims = getAllClaims(db);
+
       if (req.query.volunteerId) {
-        claims = claims.filter(c => c.volunteer_id === req.query.volunteerId);
+        claims = claims.filter(
+          claim => claim.volunteer_id === req.query.volunteerId
+        );
       }
+
       if (req.query.donationId) {
-        claims = claims.filter(c => c.donation_id === req.query.donationId);
+        claims = claims.filter(
+          claim => claim.donation_id === req.query.donationId
+        );
       }
+
       res.json(claims);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -178,8 +240,20 @@ export function createApp(dbInstance) {
 
   app.post('/api/claims', (req, res) => {
     try {
-      const { donationId, volunteerId, quantity, plannedPickupTime } = req.body;
-      const claim = createClaim(db, { donationId, volunteerId, quantity, plannedPickupTime });
+      const {
+        donationId,
+        volunteerId,
+        quantity,
+        plannedPickupTime
+      } = req.body;
+
+      const claim = createClaim(db, {
+        donationId,
+        volunteerId,
+        quantity,
+        plannedPickupTime
+      });
+
       res.status(201).json(claim);
     } catch (err) {
       res.status(err.status || 500).json({
@@ -192,41 +266,62 @@ export function createApp(dbInstance) {
   app.post('/api/claims/:id/collect', (req, res) => {
     try {
       const { volunteerId } = req.body;
-      const claim = collectClaim(db, { claimId: req.params.id, volunteerId });
+
+      const claim = collectClaim(db, {
+        claimId: req.params.id,
+        volunteerId
+      });
+
       res.json(claim);
     } catch (err) {
-      res.status(err.status || 500).json({ error: err.message });
+      res.status(err.status || 500).json({
+        error: err.message
+      });
     }
   });
 
   app.post('/api/claims/:id/cancel', (req, res) => {
     try {
       const { volunteerId } = req.body;
-      const claim = cancelClaim(db, { claimId: req.params.id, volunteerId });
+
+      const claim = cancelClaim(db, {
+        claimId: req.params.id,
+        volunteerId
+      });
+
       res.json(claim);
     } catch (err) {
-      res.status(err.status || 500).json({ error: err.message });
+      res.status(err.status || 500).json({
+        error: err.message
+      });
     }
   });
 
-  // Dashboard & Accounting
+  // Dashboard and accounting
   app.get('/api/dashboard', (req, res) => {
     try {
-      const totals = getDashboardTotals(db);
-      res.json(totals);
+      res.json(getDashboardTotals(db));
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
   });
 
-  // Serve frontend static build if available
+  // Serve the frontend build when available
   const distPath = path.join(__dirname, '..', 'frontend', 'dist');
+
   if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));
+
     app.use((req, res, next) => {
-      if (req.method === 'GET' && !req.path.startsWith('/api')) {
-        return res.sendFile(path.join(distPath, 'index.html'));
+      if (
+        req.method === 'GET' &&
+        !req.path.startsWith('/api')
+      ) {
+        return res.sendFile(
+          path.join(distPath, 'index.html')
+        );
       }
+
       next();
     });
   }
@@ -234,12 +329,22 @@ export function createApp(dbInstance) {
   return { app, db };
 }
 
-// Standalone server execution
-const isMain = process.argv[1] && process.argv[1].endsWith('server.js');
+// Create the Express app for Vercel's function handler.
+const { app } = createApp();
+
+export default app;
+
+// Support running the backend locally with npm start.
+const isMain =
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
 if (isMain) {
   const PORT = process.env.PORT || 4000;
-  const { app } = createApp();
+
   app.listen(PORT, () => {
-    console.log(`[SurplusLink Backend] Server listening on http://localhost:${PORT}`);
+    console.log(
+      `[SurplusLink Backend] Server listening on http://localhost:${PORT}`
+    );
   });
 }
